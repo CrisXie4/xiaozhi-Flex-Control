@@ -1324,6 +1324,16 @@
       }
     });
 
+    // 初始化设备选择
+    renderDeviceSelect();
+    renderTabs();
+    renderForm();
+
+    // 显示新手引导
+    setTimeout(() => {
+      showAlert("欢迎使用新手模式！\n\n此模式已简化界面，只保留核心功能。\n\n请先在'选择设备'下拉菜单中选择您的设备，然后选择要执行的操作并填写相关信息，最后点击'发送指令'按钮。\n\n如有疑问，请查看各功能区域的详细说明。", true);
+    }, 1000);
+
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.classList.add('dark');
     }
@@ -1335,6 +1345,9 @@
         document.body.classList.remove('dark');
       }
     });
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>
