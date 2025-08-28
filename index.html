@@ -698,6 +698,10 @@
           <i class="fas fa-redo"></i>
           重置
         </button>
+        <button id="btnRefresh" class="btn btn-secondary">
+          <i class="fas fa-sync"></i>
+          刷新
+        </button>
       </div>
     </section>
 
@@ -823,6 +827,7 @@
     const btnSend     = document.getElementById('btnSend');
     const btnCopy     = document.getElementById('btnCopy');
     const btnReset    = document.getElementById('btnReset');
+    const btnRefresh  = document.getElementById('btnRefresh');
     const modalClose = deviceModal.querySelector('.close');
     const editMijiaModal = document.getElementById('editMijiaModal');
     const editMijiaTitle = document.getElementById('editMijiaTitle');
@@ -837,6 +842,7 @@
     let activeKey = 'chat';
     let showDeviceId = false;
     let websocket = null;
+    let refreshInterval = null; // 用于米家设备控制界面的自动刷新
     const state = {};
     let devices = JSON.parse(localStorage.getItem('devices')) || [];
     let mijiaDevices = JSON.parse(localStorage.getItem('mijiaDevices')) || [];
@@ -1013,6 +1019,12 @@
       const def = INTERFACES.find(x => x.key === activeKey);
       formAreaEl.innerHTML = '';
 
+      // 清除之前的自动刷新定时器
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+      }
+
       if (!state[activeKey]) {
         state[activeKey] = {};
         def.fields.forEach(f => state[activeKey][f.id] = getDefaultValue(f));
@@ -1020,7 +1032,7 @@
 
       const descDiv = el('div', { class: 'text-sm text-neutral-600 dark:text-neutral-300 space-y-2' });
       if (activeKey === 'chat') {
-        descDiv.innerHTML = `<p>向设备AI发送消息，可用于MCP调用、语音播发等</p><p>text: 播放邓紫棋的多远都要在一起</p><p>text: 播放清晨音乐电台</p><p>text: 播放内存卡里的歌曲</p><p>text: 把屏幕调到夜间模式</p><p>text: 音量调到 40 后念出下面这句话，注意不要与用户对话，念完立即关闭对话并退下：\"支付宝到账一百亿\"</p><p>此功能会主动唤醒设备，并发送文字内容给 AI，效果等同于在设备旁边与之对话</p>`;
+        descDiv.innerHTML = `<p>向设备AI发送消息，可用于MCP调用、语音播发等</p><p>text: 播放邓紫棋的多远都要在一起</p><p>text: 播放清晨音乐电台</p><p>text: 播放内存卡里的歌曲</p><p>text: 把屏幕调到夜间模式</p><p>text: 音量调到 40 后念出下面这句话，注意不要与用户对话，念完立即关闭对话并退下："支付宝到账一百亿"</p><p>此功能会主动唤醒设备，并发送文字内容给 AI，效果等同于在设备旁边与之对话</p>`;
       } else if (activeKey === 'audio') {
         descDiv.innerHTML = `<p>调用设备解码播放能力，可用于歌曲、电台、语音留言等音频的精准推送</p><p>url: 音源链接，支持 .mp3、.flac、.wav、.m4a、.opus、.ogg、.m3u8</p><p>text: 音源简介、内容会显示在设备的信息胶囊</p>`;
       } else if (activeKey === 'music') {
@@ -1067,6 +1079,11 @@
           renderMijiaList(listContainer);
           mijiaSection.appendChild(listContainer);
           formAreaEl.appendChild(mijiaSection);
+          
+          // 启动米家设备控制界面的自动刷新（每5秒）
+          refreshInterval = setInterval(() => {
+            refreshPreview();
+          }, 5000);
         }
         def.fields.forEach(f => {
           const wrap = el('div', {});
@@ -1229,8 +1246,10 @@
       resultBox.textContent = '正在连接WebSocket服务器...';
       setStatus('连接中', 'info');
 
+      // 关闭之前的WebSocket连接
       if (websocket) {
         websocket.close();
+        websocket = null;
       }
 
       try {
@@ -1265,11 +1284,7 @@
           setStatus('连接错误', 'error');
         };
 
-        websocket.onclose = function(event) {
-          resultBox.textContent += `WebSocket连接已关闭，代码: ${event.code}, 原因: ${event.reason || '无'}\n`;
-          setStatus('连接关闭', 'info');
-          websocket = null;
-        };
+        websocket.onclose = function(event) {\n          resultBox.textContent += `WebSocket连接已关闭，代码: ${event.code}, 原因: ${event.reason || '无'}\n`;\n          setStatus('连接关闭', 'info');\n          websocket = null;\n        };
 
         setTimeout(() => {
           if (websocket && websocket.readyState === WebSocket.OPEN) {
@@ -1391,6 +1406,17 @@
     btnSend.addEventListener('click', sendNow);
     btnCopy.addEventListener('click', copyJSON);
     btnReset.addEventListener('click', resetFields);
+    btnRefresh.addEventListener('click', refreshPreview);
+
+    // 页面卸载时清理定时器
+    window.addEventListener('beforeunload', () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+      if (websocket) {
+        websocket.close();
+      }
+    });
 
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.classList.add('dark');

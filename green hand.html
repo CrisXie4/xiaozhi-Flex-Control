@@ -838,6 +838,10 @@
           <i class="fas fa-redo"></i>
           重置
         </button>
+        <button id="btnRefresh" class="btn btn-secondary">
+          <i class="fas fa-sync"></i>
+          刷新
+        </button>
       </div>
     </section>
 
@@ -931,6 +935,7 @@
     const btnSend     = document.getElementById('btnSend');
     const btnCopy     = document.getElementById('btnCopy');
     const btnReset    = document.getElementById('btnReset');
+    const btnRefresh  = document.getElementById('btnRefresh');
     const modalClose = deviceModal.querySelector('.close');
     
     // 弹窗元素
@@ -1333,8 +1338,10 @@
         return;
       }
 
+      // 关闭之前的WebSocket连接
       if (websocket) {
         websocket.close();
+        websocket = null;
       }
 
       try {
@@ -1461,6 +1468,11 @@
     btnSend.addEventListener('click', sendNow);
     btnCopy.addEventListener('click', copyJSON);
     btnReset.addEventListener('click', resetFields);
+    btnRefresh.addEventListener('click', () => {
+      // 在新手模式中，刷新功能主要用于重绘界面
+      renderForm();
+      showAlert('界面已刷新', true);
+    });
 
     // 弹窗事件监听器
     closeAlert.addEventListener('click', closeAlertModal);
@@ -1497,6 +1509,13 @@
 
     document.querySelector('#editMijiaModal .close').addEventListener('click', () => {
       editMijiaModal.style.display = 'none';
+    });
+
+    // 页面卸载时清理资源
+    window.addEventListener('beforeunload', () => {
+      if (websocket) {
+        websocket.close();
+      }
     });
 
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
