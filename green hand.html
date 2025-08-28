@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>小智灵活远控</title>
+  <title>小智灵活远控 - 新手模式</title>
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -584,6 +584,40 @@
       border-style: solid;
       border-color: var(--dark) transparent transparent transparent;
     }
+    
+    /* 新手模式特有样式 */
+    .beginner-highlight {
+      border: 2px solid #3b82f6 !important;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5) !important;
+    }
+    
+    .beginner-note {
+      background-color: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 1rem;
+      border-radius: 0 0.5rem 0.5rem 0;
+      margin: 1rem 0;
+    }
+    
+    .dark .beginner-note {
+      background-color: #1e3a8a;
+      border-left-color: #60a5fa;
+    }
+    
+    .beginner-tip {
+      display: inline-block;
+      background-color: #bfdbfe;
+      color: #1e40af;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .dark .beginner-tip {
+      background-color: #312e81;
+      color: #93c5fd;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#0f172a] dark:to-[#1e293b] text-neutral-800 dark:text-neutral-100">
@@ -592,21 +626,25 @@
       <div>
         <h1 class="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-3">
           <i class="fas fa-robot text-blue-500"></i>
-          小智灵活远控
+          小智灵活远控 - 新手模式
         </h1>
         <p class="text-sm text-neutral-600 dark:text-neutral-300 mt-3 max-w-3xl">
           本网站仅用于调用<a href="https://nodelua.com/home_iot/docs/#/guide/socket" class="text-blue-500 hover:underline font-medium" target="_blank">灵活接口</a>，实现远程控制小智AI。
           所有功能均由<a href="https://nodelua.com/home_iot/docs/#/guide/flex" class="text-blue-500 hover:underline font-medium" target="_blank">灵活固件</a>提供，本网站站主与灵活固件作者没有从属关系。
         </p>
+        <div class="beginner-note mt-4">
+          <p class="font-medium">新手模式说明：</p>
+          <p>此模式为简化版本，隐藏了部分高级功能，专注于基础操作。适合初次使用的用户。</p>
+        </div>
       </div>
       <div class="flex items-center gap-3">
-        <!-- 小白模式提示 -->
-        <a href="green hand.html" class="relative group">
+        <!-- 返回标准模式 -->
+        <a href="index.html" class="relative group">
           <div class="bg-blue-100 dark:bg-blue-900/30 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer">
-            <i class="fas fa-graduation-cap text-blue-800 dark:text-blue-200 text-sm"></i>
+            <i class="fas fa-arrow-left text-blue-800 dark:text-blue-200 text-sm"></i>
           </div>
           <div class="absolute right-0 mt-2 w-24 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-center text-sm font-medium text-gray-800 dark:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-            小白模式
+            返回标准模式
           </div>
         </a>
         <div class="bg-blue-100 dark:bg-blue-900/30 px-4 py-2 rounded-lg text-blue-800 dark:text-blue-200 text-sm font-medium">
@@ -656,6 +694,23 @@
       </div>
     </div>
 
+    <!-- 弹窗提醒 -->
+    <div id="alertModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="alertClose">&times;</span>
+        <h2 class="text-xl font-bold mb-5 flex items-center gap-2">
+          <i class="fas fa-info-circle text-blue-500"></i>
+          提示信息
+        </h2>
+        <div id="alertMessage" class="text-center py-4"></div>
+        <div class="text-center">
+          <button id="closeAlert" class="btn btn-primary">
+            确定
+          </button>
+        </div>
+      </div>
+    </div>
+
     <section class="sticky-header">
       <div id="tabs" class="flex flex-wrap gap-3">
       </div>
@@ -680,34 +735,6 @@
       </div>
     </section>
 
-    <section class="card p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="section-title">
-          <div class="section-title-icon">
-            <i class="fas fa-code"></i>
-          </div>
-          请求数据
-        </h2>
-        <span id="toggleJsonId" class="cursor-pointer p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="切换设备ID显示">
-          <i class="fas fa-eye text-blue-500"></i>
-        </span>
-      </div>
-      <pre id="jsonPreview" class="mono text-sm overflow-auto p-5 rounded-lg json-preview"></pre>
-    </section>
-
-    <section class="card p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="section-title">
-          <div class="section-title-icon">
-            <i class="fas fa-terminal"></i>
-          </div>
-          返回结果
-        </h2>
-        <span id="statusBadge" class="badge bg-neutral-100 dark:bg-neutral-700 badge-pulse">等待操作</span>
-      </div>
-      <pre id="resultBox" class="mono text-sm overflow-auto p-5 rounded-lg result-box"></pre>
-    </section>
-
     <section class="card footer-card">
       <h2 class="section-title justify-center">
         <div class="section-title-icon">
@@ -722,6 +749,12 @@
         <br>
         请注意：本网站捐赠资金的对象是本站的站长，而非灵活固件的作者。如果你想支持灵活固件，请在其<a href="https://nodelua.com/home_iot/docs/#/" class="text-blue-500 hover:underline font-medium" target="_blank">官网</a>找到作者的联系方式。
       </p>
+      <div class="beginner-note mt-4">
+        <p class="font-medium">新手模式说明：</p>
+        <p>• 此模式为简化版本，只保留了最常用的功能</p>
+        <p>• 如需使用完整功能，请返回标准模式</p>
+        <p>• 标准模式提供了更多高级选项和自定义设置</p>
+      </div>
     </section>
   </main>
 
@@ -785,9 +818,6 @@
 
     const tabsEl      = document.getElementById('tabs');
     const formAreaEl  = document.getElementById('formArea');
-    const jsonPreview = document.getElementById('jsonPreview');
-    const resultBox   = document.getElementById('resultBox');
-    const statusBadge = document.getElementById('statusBadge');
     const deviceSelect = document.getElementById('deviceSelect');
     const manageDevicesBtn = document.getElementById('manageDevices');
     const deviceModal = document.getElementById('deviceModal');
@@ -795,11 +825,16 @@
     const newDeviceName = document.getElementById('newDeviceName');
     const newDeviceId = document.getElementById('newDeviceId');
     const addDeviceBtn = document.getElementById('addDevice');
-    const toggleJsonId = document.getElementById('toggleJsonId');
     const btnSend     = document.getElementById('btnSend');
     const btnCopy     = document.getElementById('btnCopy');
     const btnReset    = document.getElementById('btnReset');
     const modalClose = deviceModal.querySelector('.close');
+    
+    // 弹窗元素
+    const alertModal = document.getElementById('alertModal');
+    const alertMessage = document.getElementById('alertMessage');
+    const closeAlert = document.getElementById('closeAlert');
+    const alertClose = document.getElementById('alertClose');
 
     let activeKey = 'chat';
     let showDeviceId = false;
@@ -929,7 +964,7 @@
 
       const descDiv = el('div', { class: 'text-sm text-neutral-600 dark:text-neutral-300 space-y-2' });
       if (activeKey === 'chat') {
-        descDiv.innerHTML = `<p>向设备AI发送消息，可用于MCP调用、语音播发等</p><p>text: 播放邓紫棋的多远都要在一起</p><p>text: 播放清晨音乐电台</p><p>text: 播放内存卡里的歌曲</p><p>text: 把屏幕调到夜间模式</p><p>text: 音量调到 40 后念出下面这句话，注意不要与用户对话，念完立即关闭对话并退下：\"支付宝到账一百亿\"</p><p>此功能会主动唤醒设备，并发送文字内容给 AI，效果等同于在设备旁边与之对话</p>`;
+        descDiv.innerHTML = `<p>向设备AI发送消息，可用于MCP调用、语音播发等</p><p>text: 播放邓紫棋的多远都要在一起</p><p>text: 播放清晨音乐电台</p><p>text: 播放内存卡里的歌曲</p><p>text: 把屏幕调到夜间模式</p><p>text: 音量调到 40 后念出下面这句话，注意不要与用户对话，念完立即关闭对话并退下："支付宝到账一百亿"</p><p>此功能会主动唤醒设备，并发送文字内容给 AI，效果等同于在设备旁边与之对话</p>`;
       } else if (activeKey === 'audio') {
         descDiv.innerHTML = `<p>调用设备解码播放能力，可用于歌曲、电台、语音留言等音频的精准推送</p><p>url: 音源链接，支持 .mp3、.flac、.wav、.m4a、.opus、.ogg、.m3u8</p><p>text: 音源简介、内容会显示在设备的信息胶囊</p>`;
       } else if (activeKey === 'music') {
@@ -1053,13 +1088,26 @@
     }
 
     function refreshPreview(){
-      const payload = getPreviewPayload();
-      jsonPreview.textContent = pretty(payload);
+      // 由于已删除预览区域，此函数不再需要执行任何操作
     }
 
     function setStatus(text, type){
-      statusBadge.textContent = text;
-      statusBadge.className = `badge ${type ? (type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : (type === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200')) : 'bg-neutral-100 dark:bg-neutral-700 dark:text-neutral-300'}`;
+      // 由于已删除状态显示区域，此函数不再需要执行任何操作
+    }
+
+    // 显示弹窗提醒
+    function showAlert(message, isSuccess) {
+      alertMessage.textContent = message;
+      alertMessage.className = isSuccess ? 
+        'text-center py-4 text-green-600 dark:text-green-300 font-medium' : 
+        'text-center py-4 text-red-600 dark:text-red-300 font-medium';
+      
+      alertModal.style.display = 'block';
+    }
+
+    // 关闭弹窗
+    function closeAlertModal() {
+      alertModal.style.display = 'none';
     }
 
     async function sendNow(){
@@ -1068,8 +1116,6 @@
       }
       
       const payload = buildPayload();
-      resultBox.textContent = '正在向设备发送数据...';
-      setStatus('发送中', 'info');
 
       const url = '/api/push';
 
@@ -1088,35 +1134,24 @@
         let dataText = await resp.text();
         let parsed = null;
         try { parsed = JSON.parse(dataText); } catch {}
-        const out = {
-          http状态: resp.status + ' ' + resp.statusText,
-          请求地址: 'https://nodelua.com/home_iot/api/push.php',
-          请求数据: payload,
-          返回结果: parsed || dataText,
-        };
-        resultBox.textContent = pretty(out);
-        setStatus(resp.ok ? '发送成功' : '发送失败', resp.ok ? 'success' : 'error');
+        
+        if (resp.ok) {
+          showAlert('成功了！你的设备会有反应的', true);
+        } else {
+          showAlert('失败了，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
+        }
       } catch (err) {
         clearTimeout(timer);
-        const out = {
-          错误: String(err),
-          提示: '请检查网络连接或接口地址'
-        };
-        resultBox.textContent = pretty(out);
-        setStatus('网络错误', 'error');
+        showAlert('失败了，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
       }
     }
 
     function sendStatusRequest() {
       const deviceId = currentDeviceIndex >= 0 ? devices[currentDeviceIndex].id : '';
       if (!deviceId) {
-        setStatus('设备ID不能为空', 'error');
-        resultBox.textContent = '错误：请先选择或添加设备';
+        showAlert('设备ID不能为空，请先选择或添加设备', false);
         return;
       }
-
-      resultBox.textContent = '正在连接WebSocket服务器...';
-      setStatus('连接中', 'info');
 
       if (websocket) {
         websocket.close();
@@ -1126,60 +1161,51 @@
         websocket = new WebSocket('wss://nodelua.com/wss');
 
         websocket.onopen = function(event) {
-          setStatus('已连接', 'success');
-          resultBox.textContent = 'WebSocket连接已成功建立，发送状态查询请求...\n';
-          
           const request = {
             push: deviceId,
             type: "status"
           };
           websocket.send(JSON.stringify(request));
-          resultBox.textContent += '已发送: ' + JSON.stringify(request, null, 2) + '\n\n';
         };
 
         websocket.onmessage = function(event) {
-          resultBox.textContent += '收到响应: ' + event.data + '\n';
-          setStatus('收到响应', 'success');
-          
           try {
             const data = JSON.parse(event.data);
-            resultBox.textContent += '解析后的JSON:\n' + JSON.stringify(data, null, 2) + '\n';
+            if (data.status === "online") {
+              showAlert('成功了！你的设备会有反应的', true);
+            } else {
+              showAlert('失败了，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
+            }
           } catch (e) {
-            resultBox.textContent += '响应不是有效的JSON格式\n';
+            showAlert('失败了，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
           }
         };
 
         websocket.onerror = function(error) {
-          resultBox.textContent += 'WebSocket错误: ' + JSON.stringify(error) + '\n';
-          setStatus('连接错误', 'error');
+          showAlert('连接错误，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
         };
 
         websocket.onclose = function(event) {
-          resultBox.textContent += `WebSocket连接已关闭，代码: ${event.code}, 原因: ${event.reason || '无'}\n`;
-          setStatus('连接关闭', 'info');
           websocket = null;
         };
 
         setTimeout(() => {
           if (websocket && websocket.readyState === WebSocket.OPEN) {
-            resultBox.textContent += '查询超时/查询结束，正在关闭连接...\n';
-            setStatus('查询超时/查询结束', 'error');
             websocket.close();
           }
         }, 10000);
 
       } catch (error) {
-        resultBox.textContent = '创建WebSocket连接时发生错误: ' + error.message;
-        setStatus('连接失败', 'error');
+        showAlert('连接失败，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
       }
     }
 
     function copyJSON(){
       const text = pretty(buildPayload());
       navigator.clipboard.writeText(text).then(() => {
-        setStatus('已复制', 'success');
+        showAlert('已复制到剪贴板', true);
       }).catch(()=>{
-        setStatus('复制失败', 'error');
+        showAlert('复制失败', false);
       });
     }
 
@@ -1188,38 +1214,20 @@
       state[activeKey] = {};
       def.fields.forEach(f => state[activeKey][f.id] = getDefaultValue(f));
       renderForm();
-      setStatus('已重置', 'info');
-    }
-
-    function toggleDeviceIdVisibility() {
-      showDeviceId = !showDeviceId;
-      
-      if (showDeviceId) {
-        toggleJsonId.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-          </svg>
-        `;
-      } else {
-        toggleJsonId.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-        `;
-      }
-      
-      refreshPreview();
+      showAlert('已重置', true);
     }
 
     renderDeviceSelect();
     renderTabs();
     renderForm();
-    setStatus('等待操作');
+
+    // 显示新手引导
+    setTimeout(() => {
+      showAlert("欢迎使用新手模式！\n\n此模式已简化界面，只保留核心功能。\n\n请先在'选择设备'下拉菜单中选择您的设备，然后选择要执行的操作并填写相关信息，最后点击'发送指令'按钮。\n\n如有疑问，请查看各功能区域的详细说明。", true);
+    }, 1000);
 
     deviceSelect.addEventListener('change', () => {
       currentDeviceIndex = parseInt(deviceSelect.value);
-      refreshPreview();
     });
 
     manageDevicesBtn.addEventListener('click', () => {
@@ -1250,11 +1258,19 @@
       }
     });
 
-    toggleJsonId.addEventListener('click', toggleDeviceIdVisibility);
-
     btnSend.addEventListener('click', sendNow);
     btnCopy.addEventListener('click', copyJSON);
     btnReset.addEventListener('click', resetFields);
+
+    // 弹窗事件监听器
+    closeAlert.addEventListener('click', closeAlertModal);
+    alertClose.addEventListener('click', closeAlertModal);
+
+    window.addEventListener('click', (event) => {
+      if (event.target === alertModal) {
+        closeAlertModal();
+      }
+    });
 
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.classList.add('dark');
