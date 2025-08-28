@@ -618,6 +618,91 @@
       background-color: #312e81;
       color: #93c5fd;
     }
+    
+    /* 弹窗样式优化 */
+    #alertMessage {
+      text-align: left;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-line;
+    }
+    
+    #alertMessage br {
+      display: block;
+      margin: 5px 0;
+    }
+    
+    /* 设备状态信息网格布局 */
+    .grid {
+      display: grid;
+    }
+    
+    .grid-cols-1 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    
+    @media (min-width: 768px) {
+      .md\\:grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    
+    .gap-2 {
+      gap: 0.5rem;
+    }
+    
+    .flex {
+      display: flex;
+    }
+    
+    .font-medium {
+      font-weight: 500;
+    }
+    
+    .mr-2 {
+      margin-right: 0.5rem;
+    }
+    
+    .mb-2 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .mt-4 {
+      margin-top: 1rem;
+    }
+    
+    .p-2 {
+      padding: 0.5rem;
+    }
+    
+    .rounded {
+      border-radius: 0.25rem;
+    }
+    
+    .text-lg {
+      font-size: 1.125rem;
+      line-height: 1.75rem;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .bg-green-100 {
+      background-color: #dcfce7;
+    }
+    
+    .dark .dark\\:bg-green-900 {
+      background-color: #14532d;
+    }
+    
+    .text-green-800 {
+      color: #166534;
+    }
+    
+    .dark .dark\\:text-green-200 {
+      color: #bbf7d0;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#0f172a] dark:to-[#1e293b] text-neutral-800 dark:text-neutral-100">
@@ -740,21 +825,15 @@
         <div class="section-title-icon">
           <i class="fas fa-heart text-red-500"></i>
         </div>
-        支持与感谢
+        项目开源地址
       </h2>
       <p class="text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
-        <button class="btn btn-primary inline-block mb-4">
-          <i class="fas fa-donate"></i> 点我捐赠
+        <button class="btn btn-primary inline-block mb-4" onclick="window.open('https://github.com/zhangMonday/xiaozhi-Flex-Control', '_blank')">
+          <i class="fab fa-github"></i> 访问GitHub仓库
         </button>
         <br>
-        请注意：本网站捐赠资金的对象是本站的站长，而非灵活固件的作者。如果你想支持灵活固件，请在其<a href="https://nodelua.com/home_iot/docs/#/" class="text-blue-500 hover:underline font-medium" target="_blank">官网</a>找到作者的联系方式。
+        <span>欢迎提交issue & Pull requests～灵活固件QQ交流群：1041054478</span>
       </p>
-      <div class="beginner-note mt-4">
-        <p class="font-medium">新手模式说明：</p>
-        <p>• 此模式为简化版本，只保留了最常用的功能</p>
-        <p>• 如需使用完整功能，请返回标准模式</p>
-        <p>• 标准模式提供了更多高级选项和自定义设置</p>
-      </div>
     </section>
   </main>
 
@@ -1097,10 +1176,35 @@
 
     // 显示弹窗提醒
     function showAlert(message, isSuccess) {
-      alertMessage.textContent = message;
+      // 如果消息包含设备状态信息，使用HTML格式显示
+      if (message.startsWith("设备状态信息")) {
+        // 将文本转换为HTML格式
+        const lines = message.split('\n');
+        let html = '<div class="text-left"><h3 class="font-bold text-lg mb-2">设备状态信息：</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-2">';
+        
+        // 跳过第一行标题和空行
+        for (let i = 2; i < lines.length; i++) {
+          if (lines[i].includes(':')) {
+            const [key, value] = lines[i].split(':');
+            if (key && value) {
+              html += `<div class="flex"><span class="font-medium mr-2">${key}:</span><span>${value.trim()}</span></div>`;
+            }
+          } else if (lines[i].includes('成功了')) {
+            html += `</div><div class="mt-4 p-2 bg-green-100 dark:bg-green-900 rounded text-green-800 dark:text-green-200 text-center font-medium">${lines[i]}</div>`;
+            break;
+          }
+        }
+        
+        html += '</div></div>';
+        alertMessage.innerHTML = html;
+      } else {
+        // 普通消息使用文本显示
+        alertMessage.innerHTML = message.replace(/\n/g, '<br>');
+      }
+      
       alertMessage.className = isSuccess ? 
-        'text-center py-4 text-green-600 dark:text-green-300 font-medium' : 
-        'text-center py-4 text-red-600 dark:text-red-300 font-medium';
+        'text-left py-4 text-gray-800 dark:text-gray-200' : 
+        'text-left py-4 text-red-600 dark:text-red-300 font-medium';
       
       alertModal.style.display = 'block';
     }
@@ -1146,59 +1250,7 @@
       }
     }
 
-    function sendStatusRequest() {
-      const deviceId = currentDeviceIndex >= 0 ? devices[currentDeviceIndex].id : '';
-      if (!deviceId) {
-        showAlert('设备ID不能为空，请先选择或添加设备', false);
-        return;
-      }
-
-      if (websocket) {
-        websocket.close();
-      }
-
-      try {
-        websocket = new WebSocket('wss://nodelua.com/wss');
-
-        websocket.onopen = function(event) {
-          const request = {
-            push: deviceId,
-            type: "status"
-          };
-          websocket.send(JSON.stringify(request));
-        };
-
-        websocket.onmessage = function(event) {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.status === "online") {
-              showAlert('成功了！你的设备会有反应的', true);
-            } else {
-              showAlert('失败了，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
-            }
-          } catch (e) {
-            showAlert('失败了，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
-          }
-        };
-
-        websocket.onerror = function(error) {
-          showAlert('连接错误，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
-        };
-
-        websocket.onclose = function(event) {
-          websocket = null;
-        };
-
-        setTimeout(() => {
-          if (websocket && websocket.readyState === WebSocket.OPEN) {
-            websocket.close();
-          }
-        }, 10000);
-
-      } catch (error) {
-        showAlert('连接失败，请检查设备是否开机，或者进入专家模式查看问题原因。', false);
-      }
-    }
+    function sendStatusRequest() {\n      const deviceId = currentDeviceIndex >= 0 ? devices[currentDeviceIndex].id : '';\n      if (!deviceId) {\n        showAlert('设备ID不能为空，请先选择或添加设备', false);\n        return;\n      }\n\n      if (websocket) {\n        websocket.close();\n      }\n\n      try {\n        websocket = new WebSocket('wss://nodelua.com/wss');\n\n        websocket.onopen = function(event) {\n          const request = {\n            push: deviceId,\n            type: \"status\"\n          };\n          websocket.send(JSON.stringify(request));\n        };\n\n        websocket.onmessage = function(event) {\n          try {\n            const data = JSON.parse(event.data);\n            if (data.type === \"status\") {\n              // 解析设备状态信息并显示友好的提示\n              let message = \"设备状态信息：\\n\\n\";\n              message += `设备ID: ${data.device_id}\\n`;\n              message += `音量: ${data.volume}%\\n`;\n              message += `亮度: ${data.brightness}%\\n`;\n              message += `主题模式: ${data.theme === 'light' ? '浅色' : '深色'}\\n`;\n              message += `网络类型: ${data.network}\\n`;\n              message += `信号强度: ${data.rssi} dBm\\n`;\n              message += `连接WiFi: ${data.ssid}\\n`;\n              message += `固件标识: ${data.firmware_tag}\\n`;\n              message += `固件版本: ${data.firmware_ver}\\n`;\n              message += `编译时间: ${data.compile_time}\\n`;\n              message += `本地音乐: ${data.local_music} 首\\n\\n`;\n              message += \"成功了！你的设备会有反应的\";\n              showAlert(message, true);\n            } else {\n              showAlert('失败了，请检查设备是否开机，或者进入专家模式查看问题原因。', false);\n            }\n          } catch (e) {\n            showAlert('失败了，请检查设备是否开机，或者进入专家模式查看问题原因。', false);\n          }\n        };\n\n        websocket.onerror = function(error) {\n          showAlert('连接错误，请检查设备是否开机，或者进入专家模式查看问题原因。', false);\n        };\n\n        websocket.onclose = function(event) {\n          websocket = null;\n        };\n\n        setTimeout(() => {\n          if (websocket && websocket.readyState === WebSocket.OPEN) {\n            websocket.close();\n          }\n        }, 10000);\n\n      } catch (error) {\n        showAlert('连接失败，请检查设备是否开机，或者进入专家模式查看问题原因。', false);\n      }\n    }
 
     function copyJSON(){
       const text = pretty(buildPayload());
