@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>问卷调查弹窗</title>
+  <style>
+    /* 弹窗样式 */
+    .survey-modal {
+      display: none; /* 默认隐藏 */
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5); /* 半透明背景 */
+      backdrop-filter: blur(3px);
+    }
+
+    .survey-modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 0;
+      border: none;
+      width: 90%;
+      max-width: 700px;
+      border-radius: 10px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .survey-modal-header {
+        padding: 15px 25px;
+        background-color: #3b82f6; /* 蓝色头部 */
+        color: white;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .survey-modal-header h2 {
+        margin: 0;
+        font-size: 1.2em;
+    }
+
+    .survey-modal-close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .survey-modal-close:hover,
+    .survey-modal-close:focus {
+        color: #e5e7eb;
+    }
+
+    .survey-modal-body {
+        padding: 5px;
+    }
+
+    .survey-modal-body iframe {
+        width: 100%;
+        height: 60vh; /* 设置一个合适的高度 */
+        border: none;
+    }
+
+    /* 按钮样式 */
+    .survey-open-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 15px;
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        z-index: 999;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .survey-open-btn:hover {
+        background-color: #2563eb;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- 页面内容 -->
+<h1>欢迎来到小智灵活远控</h1>
+<p>这里是你的远程控制中心。</p>
+
+<!-- 触发弹窗的按钮 (可选) -->
+<!-- <button id="openSurveyBtn" class="survey-open-btn">参与问卷调查</button> -->
+
+<!-- 弹窗 -->
+<div id="surveyModal" class="survey-modal">
+  <div class="survey-modal-content">
+    <div class="survey-modal-header">
+      <h2>用户体验调查</h2>
+      <span class="survey-modal-close">&times;</span>
+    </div>
+    <div class="survey-modal-body">
+      <iframe id="surveyIframe" src="" frameborder="0"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // 检查用户是否已经参与过调查（通过 localStorage）
+  const hasTakenSurvey = localStorage.getItem('hasTakenSurvey_xiaozhi');
+  const surveyModal = document.getElementById('surveyModal');
+  const surveyIframe = document.getElementById('surveyIframe');
+  const closeBtn = document.querySelector('.survey-modal-close');
+  // const openBtn = document.getElementById('openSurveyBtn');
+
+  const surveyUrl = 'https://www.wjx.cn/vm/QZCN6l0.aspx';
+
+  // 如果用户没有参与过调查，则显示弹窗
+  if (!hasTakenSurvey) {
+      // 设置 iframe 的 src
+      surveyIframe.src = surveyUrl;
+
+      // 显示弹窗
+      surveyModal.style.display = 'block';
+
+      // 关闭弹窗功能
+      const closeModal = function() {
+          surveyModal.style.display = 'none';
+      };
+
+      closeBtn.onclick = closeModal;
+
+      // 点击弹窗外部区域关闭弹窗
+      window.onclick = function(event) {
+          if (event.target == surveyModal) {
+              closeModal();
+          }
+      };
+
+      // 监听 iframe 的加载事件，以便在用户提交后能检测到（这个方法不一定总是可靠，取决于问卷星的实现）
+      // 一个更可靠的方法是在问卷星设置中配置一个“完成”后的跳转链接，然后监听该跳转。
+      // 这里我们采用一个简化的方法：用户点击关闭或5秒后自动记录为已参与。
+      // 注意：这只是一个模拟，实际用户可能没有完成问卷。
+      // 一个更精确的方法需要问卷平台的支持，例如通过 postMessage API 或者回调URL。
+      
+      // 假设用户打开弹窗后，过一段时间就算参与了（简化处理）
+      // 在实际应用中，你可能需要更复杂的逻辑来判断用户是否真正完成了问卷。
+      // 例如，你可以在问卷星设置一个完成后的回调页面，在那个页面里调用你网站的一个API来记录状态。
+      // 这里我们只在弹窗关闭时记录。
+      
+      const originalClose = closeModal;
+      closeModal = function() {
+          // 记录用户已参与调查，设置一个远未来的过期时间（例如10年）
+          const expiryDate = new Date();
+          expiryDate.setFullYear(expiryDate.getFullYear() + 10);
+          document.cookie = `hasTakenSurvey_xiaozhi=true; expires=${expiryDate.toUTCString()}; path=/`;
+          localStorage.setItem('hasTakenSurvey_xiaozhi', 'true');
+          originalClose();
+      };
+      closeBtn.onclick = closeModal;
+      window.onclick = function(event) {
+          if (event.target == surveyModal) {
+              closeModal();
+          }
+      };
+
+  } else {
+      // 如果用户已经参与过调查，可以选择隐藏弹窗和触发按钮
+      surveyModal.style.display = 'none';
+      // if (openBtn) openBtn.style.display = 'none';
+  }
+
+})();
+
+</script>
+
+</body>
+</html>
